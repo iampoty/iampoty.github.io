@@ -49,22 +49,17 @@ limitations under the License.
 
   <body>
     <h1>รับข่าวสาร</h1>
-    
+
     <p>Available in <a href="http://www.chromestatus.com/feature/5416033485586432">Chrome 42+</a> &amp; <a href="http://www.chromestatus.com/feature/5480344312610816">Chrome 42+</a></p>
-  
+
     <p>เลือกหมวด</p>
 
     <ol style="list-style: none">
-<?php      
-//echo "<br>\$this->news: ".var_export($this,true);
-  foreach ($this->news as $new) {
-?><li style="display:inline;"> <input type="checkbox" id="cat<?php echo $new['cat'];?>" class="js-subscribe-topic" value="cat<?php echo $new['cat'];?>"  /> <label for="cat<?php echo $new['cat'];?>"><?php echo $new['catname'];?> (<?php echo $new['cat'];?>)</label></li>
-  <button class="js-to-push-button" cat="<?php echo $new['cat'];?>">
-          Push
-        </button><br />
-  <?php
-}    
-?>      
+
+<li style="display:inline;"> <input type="checkbox" id="cat26" class="js-subscribe-topic" value="cat26"  /> <label for="cat26">เรื่องเด่นวันนี้ (26)</label></li> <button class="js-to-push-button" cat="26">Push</button><br />
+<li style="display:inline;"> <input type="checkbox" id="cat3" class="js-subscribe-topic" value="cat3"  /> <label for="cat3">ข่าวเด่นวันนี้ (3)</label></li> <button class="js-to-push-button" cat="3">Push</button><br />
+<li style="display:inline;"> <input type="checkbox" id="cat5" class="js-subscribe-topic" value="cat5"  /> <label for="cat5">ดารา คนดัง (5)</label></li> <button class="js-to-push-button" cat="5">Push</button><br />
+
     </ol>
 
 
@@ -73,19 +68,19 @@ limitations under the License.
           Enable Push Messages
         </button>
     </p>
-    
-<!--    <p>
-      <button class="js-to-push-button" enable>
-          Push Messages
+
+    <p>
+      <button class="js-get-notification-button" enable>
+          Get Notification
         </button>
-    </p>-->
-    
+    </p>
+
 <!--    <p>
       <button class="js-reset-button" enable>
           Reset
         </button>
     </p>-->
-    
+
 <!--    <br />
     <br />
 
@@ -95,13 +90,13 @@ limitations under the License.
     <br /><br />
     <?php echo strtotime("2015-07-15 17:".date("i").":00");?>
     <br /><br />-->
-    
+
     <h2>cURL Command to Send Push</h2>
     <div class="js-curl-command"></div>
-    
-    <script src="/config.js"></script>
-    <script src="/demo.js"></script>
-    <script src="/main.js"></script>
-    
+
+    <script src="/gcm/js/config.js"></script>
+    <script src="/gcm/js/demo.js"></script>
+    <script src="/gcm/js/main.js"></script>
+
   </body>
 </html>
