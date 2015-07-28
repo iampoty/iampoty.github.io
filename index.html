@@ -40,7 +40,7 @@ limitations under the License.
     <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
     <meta name="msapplication-TileColor" content="#3372DF">
 
-    <link rel="icon" href="/images/favicon.ico">
+    <link rel="icon" href="/favicon.ico">
 
     <!-- Include manifest file in the page -->
     <link rel="manifest" href="/manifest.json">
@@ -56,9 +56,9 @@ limitations under the License.
 
     <ol style="list-style: none">
 
-<li style="display:inline;"> <input type="checkbox" id="cat26" class="js-subscribe-topic" value="cat26"  /> <label for="cat26">เรื่องเด่นวันนี้ (26)</label></li> <button class="js-to-push-button" cat="26">Push</button><br />
-<li style="display:inline;"> <input type="checkbox" id="cat3" class="js-subscribe-topic" value="cat3"  /> <label for="cat3">ข่าวเด่นวันนี้ (3)</label></li> <button class="js-to-push-button" cat="3">Push</button><br />
-<li style="display:inline;"> <input type="checkbox" id="cat5" class="js-subscribe-topic" value="cat5"  /> <label for="cat5">ดารา คนดัง (5)</label></li> <button class="js-to-push-button" cat="5">Push</button><br />
+<li style="display:inline;"> <input type="checkbox" id="cat26" class="js-subscribe-topic" value="cat26"  /> <label for="cat26">เรื่องเด่นวันนี้ (26)</label></li> <button class="js-to-push-button" cat="cat26">Push</button><br />
+<li style="display:inline;"> <input type="checkbox" id="cat3" class="js-subscribe-topic" value="cat3"  /> <label for="cat3">ข่าวเด่นวันนี้ (3)</label></li> <button class="js-to-push-button" cat="cat3">Push</button><br />
+<li style="display:inline;"> <input type="checkbox" id="cat5" class="js-subscribe-topic" value="cat5"  /> <label for="cat5">ดารา คนดัง (5)</label></li> <button class="js-to-push-button" cat="cat5">Push</button><br />
 
     </ol>
 
@@ -71,7 +71,7 @@ limitations under the License.
 
     <p>
       <button class="js-get-notification-button" enable>
-          Get Notification
+          Test Get Notification
         </button>
     </p>
 
@@ -91,12 +91,13 @@ limitations under the License.
     <?php echo strtotime("2015-07-15 17:".date("i").":00");?>
     <br /><br />-->
 
-    <h2>cURL Command to Send Push</h2>
+    <!--<h2>cURL Command to Send Push</h2>-->
+    <h2></h2>
     <div class="js-curl-command"></div>
 
-    <script src="/gcm/js/config.js"></script>
-    <script src="/gcm/js/demo.js"></script>
-    <script src="/gcm/js/main.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/demo.js"></script>
+    <script src="/js/main.js"></script>
 
   </body>
 </html>

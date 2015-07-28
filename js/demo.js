@@ -15,7 +15,7 @@ window.addEventListener('load', function() {
   logDiv.classList.add('js-log');
 
   var heading = document.createElement('h2');
-  heading.textContent = 'Log';
+  heading.textContent = "";//'Log';
   logDiv.appendChild(heading);
 
   document.body.appendChild(logDiv);

@@ -7,6 +7,7 @@ var GCM_ENDPOINT = 'https://android.googleapis.com/gcm/send';
 
 var curlCommandDiv = document.querySelector('.js-curl-command');
 var isPushEnabled = false;
+var isRegister = false;
 var tk='';
 // This method handles the removal of subscriptionId
 // in Chrome 44 by concatenating the subscription Id
@@ -29,6 +30,57 @@ function endpointWorkaround(pushSubscription) {
   return mergedEndpoint;
 }
 
+function setLocalS(k,v){
+  console.log('setLocalS',k,':',v);
+  if (('localStorage' in window) && window.localStorage !== null) {
+    localStorage[k] = v;
+  } else {
+    var date = new Date();
+    date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+    var expires = date.toGMTString();
+    var cookiestr = k+'='+v+';' +' expires=' + expires + '; path=/';
+    document.cookie = cookiestr;
+  }
+}
+
+function getLocalS(k){
+  if (('localStorage' in window) && window.localStorage !== null) {
+    return localStorage[k];
+
+  } else {    
+    return getCookie(k);
+  }
+}
+
+function remLocalS(k){
+  console.log('remLocalS',k);
+  if (('localStorage' in window) && window.localStorage !== null) {
+    localStorage[k] = null;
+    localStorage.removeItem(k);
+  } else {
+    var date = new Date();
+    date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+    var expires = date.toGMTString();
+    var cookiestr = k+'=;' +' expires=' + expires + '; path=/';
+    document.cookie = cookiestr;
+  }
+}
+
+function getCookie(c_name)
+{
+var i,x,y,ARRcookies=document.cookie.split(";");
+for (i=0;i<ARRcookies.length;i++)
+  {
+  x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+  y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+  x=x.replace(/^\s+|\s+$/g,"");
+  if (x==c_name)
+    {
+    return unescape(y);
+    }
+  }
+}
+
 function sendSubscriptionToServer(subscription) {
   // TODO: Send the subscription.endpoint
   // to your server and save it to send a
@@ -36,11 +88,20 @@ function sendSubscriptionToServer(subscription) {
   //
   // For compatibly of Chrome 43, get the endpoint via
   // endpointWorkaround(subscription)
-  console.log('TODO: Implement sendSubscriptionToServer()');
+  isRegister = true;
+  var regId = getLocalS('register');
+  console.log('TODO: Implement sendSubscriptionToServer()',subscription,'/',regId);
+  
+  if(regId !== subscription.subscriptionId){       
+    console.log('New RegId: TODO: remove Old RegId (',subscription.subscriptionId,'/',regId,')');
+//    saveRegId(subscription.subscriptionId);
+    setLocalS('register',subscription.subscriptionId);
+  }
+  toPushMessage({'event':'subscription','subscriptionId':subscription.subscriptionId});
+//  var mergedEndpoint = endpointWorkaround(subscription);
 
-toPushMessage({'event':'subscription','subscriptionId':subscription.subscriptionId})
-  var mergedEndpoint = endpointWorkaround(subscription);
-  showCurlCommand(mergedEndpoint);  
+  //showCurlCommand(mergedEndpoint);
+
 }
 
 // NOTE: This code is only suitable for GCM endpoints,
@@ -65,7 +126,19 @@ tk = subscriptionId
 }
 
 function sendUnsubscriptionToServer(successful,subscription){
-  console.log('successful',successful,subscription);
+  
+  isRegister = false;
+  remLocalS('register');
+  var subscribeButton = document.querySelectorAll('.js-subscribe-topic');
+  for (var i = 0; i < subscribeButton.length; i++) {    
+    var btn = subscribeButton[i];
+    var isRegis = getLocalS(btn.value);
+    console.log(i,btn.value,isRegis);
+    if(isRegis){
+      remLocalS(btn.value);
+      btn.checked = false;
+    }
+  }
   toPushMessage({'event':'unsubscription','subscriptionId':subscription.subscriptionId});
 }
 
@@ -73,17 +146,11 @@ function unsubscribe() {
   var pushButton = document.querySelector('.js-push-button');
   pushButton.disabled = true;
   curlCommandDiv.textContent = '';
-  console.log('unsubscription');
   
   navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
-    // To unsubscribe from push messaging, you need get the
-    // subcription object, which you can call unsubscribe() on.
     serviceWorkerRegistration.pushManager.getSubscription().then(
       function(pushSubscription) {
-        // Check we have a subscription to unsubscribe
         if (!pushSubscription) {
-          // No subscription object, so set the state
-          // to allow the user to subscribe to push
           isPushEnabled = false;
           pushButton.disabled = false;
           pushButton.textContent = 'Enable Push Messages';
@@ -91,79 +158,40 @@ function unsubscribe() {
           return;
         }
 
-console.log('--pushSubscription',pushSubscription);
-        // TODO: Make a request to your server to remove
-        // the users data from your data store so you
-        // don't attempt to send them push messages anymore
-
-        // We have a subcription, so call unsubscribe on it
         pushSubscription.unsubscribe().then(function(successful) {
           pushButton.disabled = false;
           pushButton.textContent = 'Enable Push Messages';
           isPushEnabled = false;
-          console.log('unsubscription successful',successful);
-          
-          sendUnsubscriptionToServer(successful,pushSubscription);
-          
-          
-        }).catch(function(e) {
-          // We failed to unsubscribe, this can lead to
-          // an unusual state, so may be best to remove
-          // the subscription id from your data store and
-          // inform the user that you disabled push
-          console.log('unsubscription error',e);
-          window.Demo.debug.log('Unsubscription error: ', e);
+          console.log('unsubscription successful',successful);          
+          sendUnsubscriptionToServer(successful,pushSubscription);                    
+        }).catch(function(e) {          
+//          window.Demo.debug.log('Unsubscription error: ', e);
           pushButton.disabled = false;
         });
       }).catch(function(e) {
-        console.log('unsubscription catch');
-        window.Demo.debug.log('Error thrown while unsubscribing from ' +
-          'push messaging.', e);
+//        window.Demo.debug.log('Error thrown while unsubscribing from ' +'push messaging.', e);
       });
   });
 }
 
 function subscribe() {
-  // Disable the button so it can't be changed while
-  // we process the permission request
   var pushButton = document.querySelector('.js-push-button');
   pushButton.disabled = true;
 
   navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {    
-    console.log('serviceWorkerRegistration',serviceWorkerRegistration);
-
-    if (serviceWorkerRegistration.installing) {
-      serviceWorkerRegistration.installing.postMessage("Hello");
-    }
-    serviceWorkerRegistration.pushManager.subscribe({userVisibleOnly: true,topic:'/topics/cat26'})
-      .then(function(subscription) {
-
-        console.log('subscription successful ',subscription);
-
-        // The subscription was successful
+    serviceWorkerRegistration.pushManager.subscribe({userVisibleOnly: true}).then(function(subscription) {
         isPushEnabled = true;
         pushButton.textContent = 'Disable Push Messages';
         pushButton.disabled = false;
-
-        // TODO: Send the subscription subscription.endpoint
-        // to your server and save it to send a push message
-        // at a later date
         return sendSubscriptionToServer(subscription);
       })
       .catch(function(e) {
-        console.log('subscription catch ',e);
+//        console.log('subscription catch ',e);
         if (Notification.permission === 'denied') {
-          // The user denied the notification permission which
-          // means we failed to subscribe and the user will need
-          // to manually change the notification permission to
-          // subscribe to push messages
-          window.Demo.debug.log('Permission for Notifications was denied');
+//          window.Demo.debug.log('Permission for Notifications was denied');
           pushButton.disabled = true;
         } else {
-          // A problem occurred with the subscription, this can
-          // often be down to an issue or lack of the gcm_sender_id
-          // and / or gcm_user_visible_only
-          window.Demo.debug.log('Unable to subscribe to push.', e);
+//          window.Demo.debug.log('Unable to subscribe to push.', e);
           pushButton.disabled = false;
           pushButton.textContent = 'Enable Push Messages';
         }
@@ -174,10 +202,6 @@ function subscribe() {
 }
 
 function toPushMessage(message) {
-  // This wraps the message posting/response in a promise, which will resolve if the response doesn't
-  // contain an error, and reject with the error if it does. If you'd prefer, it's possible to call
-  // controller.postMessage() and set up the onmessage handler independently of a promise, but this is
-  // a convenient wrapper.
   return new Promise(function(resolve, reject) {
     var messageChannel = new MessageChannel();
     messageChannel.port1.onmessage = function(event) {
@@ -187,29 +211,20 @@ function toPushMessage(message) {
         resolve(event.data);
       }
     };
-
-    // This sends the message data as well as transferring messageChannel.port2 to the service worker.
-    // The service worker can then use the transferred port to reply via postMessage(), which
-    // will in turn trigger the onmessage handler on messageChannel.port1.
-    // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
-    console.log('message:',message);
+//    console.log('message:',message);
     navigator.serviceWorker.controller.postMessage(message, [messageChannel.port2]);
 //    navigator.serviceWorker.controller.postMessage({'message':message,'token':tk}, [messageChannel.port2]);
   });
 }
 
-// Once the service worker is registered set the initial state
 function initialiseState() {
   console.log('start initialiseState');
-  // Are Notifications supported in the service worker?
+  
   if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
     window.Demo.debug.log('Notifications aren\'t supported.');
     return;
   }
 
-  // Check the current Notification permission.
-  // If its denied, it's a permanent block until the
-  // user changes the permission
   if (Notification.permission === 'denied') {
     window.Demo.debug.log('The user has blocked notifications.');
     return;
@@ -247,7 +262,7 @@ function initialiseState() {
         isPushEnabled = true;
       })
       .catch(function(err) {
-        window.Demo.debug.log('Error during getSubscription()', err);
+//        window.Demo.debug.log('Error during getSubscription()', err);
       });
   });
 }
@@ -255,22 +270,33 @@ function initialiseState() {
 window.addEventListener('load', function() {
   var i;
   var subscribeButton = document.querySelectorAll('.js-subscribe-topic');
-  console.log('subscribeButton',subscribeButton);
+//  console.log('subscribeButton',subscribeButton);
   for (i = 0; i < subscribeButton.length; i++) {
+    var btn = subscribeButton[i];
+//    console.log('btn',btn.value);
+    var isRegis = getLocalS(btn.value);
+    if(isRegis && isPushEnabled){
+      btn.checked = true;
+    }else{
+      btn.checked = false;
+      remLocalS(btn.value);
+    }
+//    console.log('isRegis ',isRegis);
+    
   subscribeButton[i].addEventListener('change', function(ev) {
-    console.log('toPushButton',this.type,this.checked,this.attributes.value,this.value,this.attributes.checked);
-    
-//    console.log('ev',ev);
-    
-//    console.log('ev',ev);
-//    ev['test']='1233';
-//    this.type.push({'test':1233});
-//    this.type['test']='aaaa';
-    
-//    console.log('ev2',ev);
-    
-    
-    toPushMessage({'event':this.checked?'subscribe_topic':'subscribe_topic','cat':this.value});
+//    console.log('toPushButton',this.value);
+    if (isPushEnabled) {
+      var isRegis = this.checked;
+      var topicId = this.value;
+      if(isRegis){//add
+        setLocalS(topicId,1);
+      }else{//remove
+        remLocalS(topicId);
+      }
+      toPushMessage({'event':isRegis?'subscribe_topic':'unsubscribe_topic','topicId':topicId});
+    }else{
+      this.checked = false;
+    }
   });
 }
   
@@ -284,44 +310,27 @@ window.addEventListener('load', function() {
   });
 
 
+var getNotificationButton = document.querySelector('.js-get-notification-button');
+  getNotificationButton.addEventListener('click', function() {
+    toPushMessage({'event':'getnotification'});
+  });
 
 var toPushButton = document.querySelectorAll('.js-to-push-button');
-//console.log('toPushButton ',toPushButton );
-
 for (i = 0; i < toPushButton.length; i++) {
   toPushButton[i].addEventListener('click', function() {
-//    console.log('toPushButton',toPushButton[i],this.attributes.getNamedItem("cat").value);
-    toPushMessage({'event':'push','cat':this.attributes.getNamedItem("cat").value});
+    console.log('toPushButton',this.attributes.getNamedItem("cat").value);
+    toPushMessage({'event':'push','topicId':this.attributes.getNamedItem("cat").value});
   });
 }
 
-//var resetButton = document.querySelector('.js-reset-button');
-//resetButton.addEventListener('click', function() {
-//  console.log('toPushButton');
-//  toPushMessage('reset');
-//});
-
-
-//sw.register("/service_worker.js", { pushChannel: "twitter" });
-//
-//swReady().then(function(sw) {
-//  push.register(sw, "twitter");
-//}
-  // Check that service workers are supported, if so, progressively
-  // enhance and add push messaging support, otherwise continue without it.
-  if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
     console.log('start serviceWorker');
-//    navigator.serviceWorker.register('./service-worker.js')
-    navigator.serviceWorker.register('/service-worker.js',{scope: './'})
+//    navigator.serviceWorker.register('http://localhost:8081/gcm/service-worker.js')
+    navigator.serviceWorker.register('/service-worker.js')
+//    navigator.serviceWorker.register('/js/service-worker.js',{scope: '/js/'})
     .then(initialiseState);
   } else {
     window.Demo.debug.log('Service workers aren\'t supported in this browser.');
   }
-  
-  
-  navigator.serviceWorker.addEventListener("message", function(event) {
-    console.log('navigator listener message',event,event.data);
-    new Notification(event.data.title, event.data.options);  
-  });
 
 });
