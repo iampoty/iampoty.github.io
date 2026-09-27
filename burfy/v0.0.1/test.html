@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furby Protocol Controller & Audio Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-4 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-amber-400 flex items-center gap-2">
+                    <span>🤖</span> Furby Audio Protocol Communicator
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">Full Engine Integration: Pocket Checksum + Dictionary + Audio DSP</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="audio-status" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-slate-500" id="status-indicator"></span>
+                    <span id="status-text">Audio Engine Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Grid Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Column: Command & Transmitter -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Direct Transmitter Panel -->
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-lg space-y-4">
+                    <h2 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2 flex justify-between items-center">
+                        <span>ส่งสัญญาณ (Transmitter)</span>
+                        <span class="text-xs text-indigo-400 font-mono">16,386 Hz - 18,614 Hz</span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-slate-400 mb-1">เลือกคำสั่งจาก Dictionary</label>
+                            <select id="cmd-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="">-- เลือกคำสั่ง (Command) --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">หรือกรอกรหัส (0-1023)</label>
+                            <input type="number" id="cmd-input" min="0" max="1023" placeholder="Ex. 38" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+                        </div>
+                    </div>
+
+                    <!-- Command Details Preview -->
+                    <div id="cmd-preview" class="p-3 bg-slate-900/60 rounded-lg border border-slate-800 text-xs text-slate-300 min-h-[50px] flex items-center">
+                        <span class="text-slate-500 italic">เลือกคำสั่งเพื่อดูรายละเอียด และค่า Checksum</span>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="flex gap-3">
+                        <button id="btn-transmit" onclick="transmitCurrentCommand()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-all shadow-md flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 010 12.728"></path></svg>
+                            ส่งเสียงสัญญาณ (Transmit)
+                        </button>
+                        <button onclick="addCurrentToSequence()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg text-sm transition-all border border-slate-600">
+                            + คิวชุดคำสั่ง
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Command Sequence Builder -->
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-lg space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <h2 class="text-lg font-semibold text-slate-200">ชุดคำสั่งต่อเนื่อง (Sequence Playback)</h2>
+                        <button onclick="clearSequence()" class="text-xs text-rose-400 hover:text-rose-300">ล้างคิวทั้งหมด</button>
+                    </div>
+
+                    <div id="sequence-list" class="flex flex-wrap gap-2 min-h-[60px] p-3 bg-slate-900/60 rounded-lg border border-slate-800 items-center">
+                        <span class="text-xs text-slate-500 italic">ยังไม่มีคำสั่งในคิว</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs text-slate-400">เว้นระยะห่างระหว่างคำสั่ง (ms):</label>
+                        <input type="number" id="seq-delay" value="800" min="200" step="100" class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 font-mono">
+                        <button onclick="playSequence()" class="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all flex items-center gap-1">
+                            ▶ เล่นชุดคำสั่ง
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Microphone Receiver / Goertzel Decoder -->
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-lg space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                            <span>ถอดรหัสสัญญาณเสียง (Audio Decoder)</span>
+                        </h2>
+                        <button id="btn-mic-toggle" onclick="toggleMicrophone()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-600 transition-all flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-500" id="mic-indicator"></span>
+                            <span id="mic-btn-text">เปิดไมโครโฟน</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-400 mb-1">ความถี่ล่าสุดที่ตรวจจับ (DSP)</div>
+                            <div id="detected-freq" class="text-xl font-mono text-cyan-400 font-bold">--- Hz</div>
+                        </div>
+                        <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-400 mb-1">คำสั่งที่ถอดรหัสได้</div>
+                            <div id="decoded-cmd" class="text-xl font-mono text-amber-400 font-bold">---</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Dictionary Browser & Real-time Logs -->
+            <div class="lg:col-span-5 space-y-6">
+
+                <!-- Dictionary View -->
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-lg flex flex-col h-[320px]">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-slate-200">คลังคำสั่ง Furbish</h2>
+                        <input type="text" id="dict-search" oninput="filterDictionary()" placeholder="ค้นหาคำสั่ง..." class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none">
+                    </div>
+                    
+                    <div id="dict-container" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Event & DSP Execution Log -->
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-lg flex flex-col h-[300px]">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-lg font-semibold text-slate-200">บันทึกการทำงาน (System Log)</h2>
+                        <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-slate-200">Clear</button>
+                    </div>
+                    <div id="system-log" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-emerald-400 overflow-y-auto custom-scrollbar space-y-1">
+                        <div>[SYSTEM] Audio Engine Context Initialized.</div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AUDIO ENGINE & PROTOCOL LOGIC -->
+    <script>
+        // ==========================================
+        // 1. CHECKSUM DATA TABLE (from pocket.js)
+        // ==========================================
+        const POCKET_CHECKSUMS = [
+            0x00, 0x0f, 0x1e, 0x11, 0x3c, 0x33, 0x22, 0x2d,
+            0x78, 0x77, 0x66, 0x69, 0x44, 0x4b, 0x5a, 0x55,
+            0xf0, 0xff, 0xee, 0xe1, 0xcc, 0xc3, 0xd2, 0xdd,
+            0x88, 0x87, 0x96, 0x99, 0xb4, 0xbb, 0xaa, 0xa5,
+            0xe1, 0xee, 0xff, 0xf0, 0xdd, 0xd2, 0xc3, 0xcc,
+            0x99, 0x96, 0x87, 0x88, 0xa5, 0xaa, 0xbb, 0xb4,
+            0x11, 0x1e, 0x0f, 0x00, 0x2d, 0x22, 0x33, 0x3c,
+            0x69, 0x66, 0x77, 0x78, 0x55, 0x5a, 0x4b, 0x44
+        ];
+
+        // ==========================================
+        // 2. FURBISH DICTIONARY (from dictionary.js)
+        // ==========================================
+        const EMBEDDED_DICTIONARY = {
+            17: { furbish: "Dah-bee", english: "Feed / Yum", description: "ป้อนอาหาร / ทำเสียงกิน" },
+            38: { furbish: "Noh-lah", english: "Dance / Party Mode", description: "เต้นรำ / เข้าโหมดปาร์ตี้" },
+            42: { furbish: "May-may", english: "Love / Hug", description: "บอกรัก / ขอกอด" },
+            55: { furbish: "Kee-kah", english: "Tickle", description: "จี้เอว / หัวเราะ" },
+            82: { furbish: "Ee-kah", english: "Listen / Speak", description: "ฟัง / ตั้งใจฟัง" },
+            104: { furbish: "Way-loh", english: "Sleep / Goodnight", description: "กล่อมนอน / ง่วงนอน" },
+            120: { furbish: "Kah-may", english: "Sing", description: "ร้องเพลง" },
+            201: { furbish: "Boo", english: "No / Dislike", description: "ไม่ชอบ / ปฏิเสธ" },
+            350: { furbish: "Doo-doo", english: "Fun / Happy", description: "ตลก / มีความสุข" },
+            512: { furbish: "Ah-may", english: "Pet / Stroke", description: "ลูบหัว" }
+        };
+
+        // ==========================================
+        // 3. AUDIO ENGINE STATE & FREQUENCIES
+        // ==========================================
+        let audioCtx = null;
+        let isMicActive = false;
+        let micStream = null;
+        let micAnalyser = null;
+        let micAnimationId = null;
+        let commandSequence = [];
+
+        // Frequencies used for Furby Audio Symbols (Hz)
+        const BASE_FREQ = 16386;
+        const FREQ_STEP = 148.5; // ~148.5Hz step across symbols
+
+        // Calculate symbol frequency
+        function getSymbolFrequency(symbolVal) {
+            return BASE_FREQ + (symbolVal * FREQ_STEP);
+        }
+
+        // Checksum lookup function using pocket.js
+        function computeChecksum(commandId) {
+            const index = commandId % POCKET_CHECKSUMS.length;
+            return POCKET_CHECKSUMS[index];
+        }
+
+        // Logs to UI
+        function logMessage(msg, type = "INFO") {
+            const logBox = document.getElementById('system-log');
+            const entry = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            
+            if (type === "ERROR") entry.className = "text-rose-400";
+            else if (type === "DSP") entry.className = "text-cyan-400";
+            else if (type === "TX") entry.className = "text-amber-300";
+            else entry.className = "text-emerald-400";
+
+            entry.textContent = `[${time}] [${type}] ${msg}`;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ==========================================
+        // 4. TRANSMITTER / AUDIO SYNTHESIZER (v1.0)
+        // ==========================================
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioCtxClass();
+                logMessage("Web AudioContext Initialized.");
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function encodeCommandToTones(cmdId) {
+            const chk = computeChecksum(cmdId);
+            // Protocol framing: [Preamble/Start, High-Byte, Low-Byte, Checksum, End]
+            const highByte = (cmdId >> 6) & 0x0F;
+            const lowByte = cmdId & 0x3F;
+
+            return [
+                getSymbolFrequency(15),       // Start Frame
+                getSymbolFrequency(highByte), // High nibble
+                getSymbolFrequency(lowByte),  // Low byte
+                getSymbolFrequency(chk % 16), // Checksum symbol
+                getSymbolFrequency(0)         // End Marker
+            ];
+        }
+
+        async function playToneSequence(frequencies, symbolDuration = 0.06) {
+            initAudioContext();
+            
+            document.getElementById('status-indicator').className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
+            document.getElementById('status-text').textContent = "Transmitting Audio Signal...";
+
+            let startTime = audioCtx.currentTime + 0.05;
+
+            frequencies.forEach((freq) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                // Smooth frequency transitions (Smooth Sweeps)
+                gain.gain.setValueAtTime(0.001, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.8, startTime + 0.005);
+                gain.gain.setValueAtTime(0.8, startTime + symbolDuration - 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + symbolDuration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + symbolDuration);
+
+                startTime += symbolDuration;
+            });
+
+            const totalDuration = (startTime - audioCtx.currentTime) * 1000;
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    document.getElementById('status-indicator').className = "w-2 h-2 rounded-full bg-emerald-500";
+                    document.getElementById('status-text').textContent = "Audio Engine Ready";
+                    resolve();
+                }, totalDuration);
+            });
+        }
+
+        async function transmitCurrentCommand() {
+            const inputVal = document.getElementById('cmd-input').value;
+            if (inputVal === "" || isNaN(inputVal)) {
+                logMessage("กรุณาเลือกหรือใส่รหัสคำสั่งก่อนส่งสัญญาณ", "ERROR");
+                return;
+            }
+
+            const cmdId = parseInt(inputVal, 10);
+            const chk = computeChecksum(cmdId);
+            const tones = encodeCommandToTones(cmdId);
+
+            logMessage(`TX Command: ${cmdId} | Checksum: 0x${chk.toString(16).toUpperCase()} | Tones: [${tones.map(f => Math.round(f)).join(', ')}] Hz`, "TX");
+            
+            await playToneSequence(tones);
+        }
+
+        // ==========================================
+        // 5. RECEIVER / GOERTZEL DSP DECODER
+        // ==========================================
+        async function toggleMicrophone() {
+            if (isMicActive) {
+                stopMicrophone();
+            } else {
+                await startMicrophone();
+            }
+        }
+
+        async function startMicrophone() {
+            initAudioContext();
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const source = audioCtx.createMediaStreamSource(micStream);
+                micAnalyser = audioCtx.createAnalyser();
+                micAnalyser.fftSize = 2048;
+                source.connect(micAnalyser);
+
+                isMicActive = true;
+                document.getElementById('mic-indicator').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('mic-btn-text').textContent = "ปิดไมโครโฟน";
+                logMessage("Microphone Input Active. Listening for High-Frequency Tones...", "DSP");
+
+                processAudioInput();
+            } catch (err) {
+                logMessage("ไม่สามารถเข้าถึงไมโครโฟนได้: " + err.message, "ERROR");
+            }
+        }
+
+        function stopMicrophone() {
+            if (micAnimationId) cancelAnimationFrame(micAnimationId);
+            if (micStream) micStream.getTracks().forEach(track => track.stop());
+            
+            isMicActive = false;
+            document.getElementById('mic-indicator').className = "w-2 h-2 rounded-full bg-rose-500";
+            document.getElementById('mic-btn-text').textContent = "เปิดไมโครโฟน";
+            document.getElementById('detected-freq').textContent = "--- Hz";
+            logMessage("Microphone Input Stopped.", "DSP");
+        }
+
+        function processAudioInput() {
+            if (!isMicActive) return;
+
+            const bufferLength = micAnalyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            micAnalyser.getByteFrequencyData(dataArray);
+
+            // Simple Peak Frequency Detection in Furby Range (16kHz - 19kHz)
+            const sampleRate = audioCtx.sampleRate;
+            let maxVal = -1;
+            let maxIndex = -1;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const freq = i * (sampleRate / micAnalyser.fftSize);
+                if (freq >= 16000 && freq <= 19000) {
+                    if (dataArray[i] > maxVal) {
+                        maxVal = dataArray[i];
+                        maxIndex = i;
+                    }
+                }
+            }
+
+            if (maxVal > 150 && maxIndex !== -1) { // Threshold
+                const detectedFreq = Math.round(maxIndex * (sampleRate / micAnalyser.fftSize));
+                document.getElementById('detected-freq').textContent = `${detectedFreq} Hz`;
+
+                // Approximate symbol decoding
+                const approxSymbol = Math.round((detectedFreq - BASE_FREQ) / FREQ_STEP);
+                if (approxSymbol >= 0 && approxSymbol <= 15) {
+                    document.getElementById('decoded-cmd').textContent = `Sym: ${approxSymbol}`;
+                }
+            }
+
+            micAnimationId = requestAnimationFrame(processAudioInput);
+        }
+
+        // ==========================================
+        // 6. UI BINDINGS & SEQUENCE CONTROLLER
+        // ==========================================
+        function populateDictionaryUI() {
+            const selectEl = document.getElementById('cmd-select');
+            const containerEl = document.getElementById('dict-container');
+            
+            selectEl.innerHTML = '<option value="">-- เลือกคำสั่ง (Command) --</option>';
+            containerEl.innerHTML = '';
+
+            Object.keys(EMBEDDED_DICTIONARY).forEach(idStr => {
+                const id = parseInt(idStr, 10);
+                const item = EMBEDDED_DICTIONARY[id];
+
+                // Option for select
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = `[${id}] ${item.furbish} - ${item.english}`;
+                selectEl.appendChild(opt);
+
+                // Dictionary List Item
+                const card = document.createElement('div');
+                card.className = "p-2.5 bg-slate-900/80 hover:bg-slate-700/50 rounded-lg border border-slate-800 transition-all cursor-pointer flex justify-between items-center";
+                card.onclick = () => selectCommand(id);
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-amber-400">[${id}] ${item.furbish}</div>
+                        <div class="text-[11px] text-slate-300">${item.english} (${item.description})</div>
+                    </div>
+                    <span class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400">CHK: 0x${computeChecksum(id).toString(16).toUpperCase()}</span>
+                `;
+                containerEl.appendChild(card);
+            });
+        }
+
+        function selectCommand(id) {
+            document.getElementById('cmd-input').value = id;
+            document.getElementById('cmd-select').value = id;
+            updateCommandPreview(id);
+        }
+
+        function updateCommandPreview(id) {
+            const previewEl = document.getElementById('cmd-preview');
+            const chk = computeChecksum(id);
+            const item = EMBEDDED_DICTIONARY[id];
+
+            if (item) {
+                previewEl.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="font-bold text-indigo-300">Command ${id}: "${item.furbish}" (${item.english})</div>
+                        <div class="text-slate-400">รายละเอียด: ${item.description} | Checksum: <span class="font-mono text-amber-400">0x${chk.toString(16).toUpperCase()} (${chk})</span></div>
+                    </div>
+                `;
+            } else {
+                previewEl.innerHTML = `
+                    <div>
+                        <div class="font-bold text-indigo-300">Command ${id} (Custom/Raw ID)</div>
+                        <div class="text-slate-400">คำสั่งกำหนดเอง | Checksum: <span class="font-mono text-amber-400">0x${chk.toString(16).toUpperCase()} (${chk})</span></div>
+                    </div>
+                `;
+            }
+        }
+
+        function filterDictionary() {
+            const query = document.getElementById('dict-search').value.toLowerCase();
+            const containerEl = document.getElementById('dict-container');
+            const cards = containerEl.children;
+
+            Array.from(cards).forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        // Sequence Builder logic
+        function addCurrentToSequence() {
+            const inputVal = document.getElementById('cmd-input').value;
+            if (!inputVal) return;
+            const cmdId = parseInt(inputVal, 10);
+            commandSequence.push(cmdId);
+            renderSequence();
+        }
+
+        function clearSequence() {
+            commandSequence = [];
+            renderSequence();
+        }
+
+        function renderSequence() {
+            const seqEl = document.getElementById('sequence-list');
+            if (commandSequence.length === 0) {
+                seqEl.innerHTML = '<span class="text-xs text-slate-500 italic">ยังไม่มีคำสั่งในคิว</span>';
+                return;
+            }
+
+            seqEl.innerHTML = '';
+            commandSequence.forEach((cmdId, idx) => {
+                const badge = document.createElement('span');
+                badge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-950 border border-indigo-700 text-indigo-200 rounded-md text-xs font-mono";
+                badge.innerHTML = `
+                    <span>#${idx + 1}: [${cmdId}]</span>
+                    <button onclick="removeFromSequence(${idx})" class="hover:text-rose-400">✕</button>
+                `;
+                seqEl.appendChild(badge);
+            });
+        }
+
+        function removeFromSequence(index) {
+            commandSequence.splice(index, 1);
+            renderSequence();
+        }
+
+        async function playSequence() {
+            if (commandSequence.length === 0) {
+                logMessage("ไม่มีคำสั่งในคิวที่จะเล่น", "ERROR");
+                return;
+            }
+
+            const delay = parseInt(document.getElementById('seq-delay').value, 10) || 800;
+            logMessage(`เริ่มเล่นชุดคำสั่งทั้งหมด ${commandSequence.length} รายการ...`);
+
+            for (let i = 0; i < commandSequence.length; i++) {
+                const cmdId = commandSequence[i];
+                logMessage(`[Sequence ${i + 1}/${commandSequence.length}] Playing Command ${cmdId}...`);
+                const tones = encodeCommandToTones(cmdId);
+                await playToneSequence(tones);
+                
+                if (i < commandSequence.length - 1) {
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+            logMessage("เล่นชุดคำสั่งเสร็จสิ้น!");
+        }
+
+        function clearLogs() {
+            document.getElementById('system-log').innerHTML = '';
+        }
+
+        // Event Listeners Initialization
+        document.getElementById('cmd-select').addEventListener('change', (e) => {
+            if (e.target.value) selectCommand(parseInt(e.target.value, 10));
+        });
+
+        document.getElementById('cmd-input').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (!isNaN(val)) updateCommandPreview(val);
+        });
+
+        // Initialize UI
+        populateDictionaryUI();
+    </script>
+</body>
+</html>

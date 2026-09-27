@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hacksby · Furby audio protocol (web)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<div class="toprow">
+  <div>
+    <h1>Hacks<span>by</span></h1>
+    <p class="tag">Hack-a-Furby · Furby 2012 audio protocol · Perl → JavaScript, runs 100% in your browser</p>
+  </div>
+  <button id="themeBtn" class="chip" title="สลับธีม">◐ theme</button>
+</div>
+
+<div class="warn">
+  <b>CAUTION:</b> เปิดเสียงดังเกินไปอาจทำร้ายหูและลำโพงได้ — ตั้งวอลลุ่มเครื่องให้ต่ำสุดก่อน แล้วค่อยๆ เพิ่มจนตุ๊กตา Furby ตอบสนอง
+  (ซอฟต์แวร์นี้ให้ไว้เพื่อการศึกษา ไม่รับประกันความถูกต้อง ผู้ใช้รับความเสี่ยงเอง)
+</div>
+
+<!-- ============ 01 SEND ============ -->
+<section class="panel" id="send">
+  <h2><i>00</i>Send · furby-send.pl</h2>
+  <div class="row">
+    <div><label for="cmd">command [0..1023]</label>
+      <input type="number" id="cmd" min="0" max="1023" value="350" inputmode="numeric"></div>
+    <button class="primary" id="btnPlay">▶ Play</button>
+    <button id="btnNext">+1</button>
+    <button id="btnRepeat">↻ repeat</button>
+    <button id="btnWav">⬇ out.wav</button>
+  </div>
+  <div class="row">
+    <div><label for="vol">volume <span id="volTxt"></span></label><input type="range" id="vol" min="0" max="100" value="30"></div>
+    <label style="margin:18px 0 0"><input type="checkbox" id="inter"> --interactive</label>
+    <label style="margin:18px 0 0"><input type="checkbox" id="keep"> keep-alive (820 ทุก 40 วิ)</label>
+  </div>
+  <p class="hint" id="interHint">โหมดปกติ: กด Enter ในช่องตัวเลขเพื่อเล่น · โหมด interactive: หลังเล่นแล้วช่องจะว่างให้พิมพ์ — <b>Enter ว่าง</b> = คำสั่งถัดไป, <b>ตัวเลข</b> = เล่นเลขนั้น, <b>ข้อความอื่น (เช่น r)</b> = เล่นซ้ำ</p>
+  <div class="row" id="quick"></div>
+  <div style="margin-top:14px" id="insp" hidden>
+    <div class="small dim mono" id="inspHead"></div>
+    <div class="q" id="inspQ"></div>
+    <pre id="inspDiag" style="margin-top:8px"></pre>
+  </div>
+  <div class="log" id="sendLog" style="margin-top:12px" aria-live="polite"></div>
+</section>
+
+<!-- ============ 02 LISTEN ============ -->
+<section class="panel" id="listen">
+  <h2><i>01</i>Listen · furby-decode.pl</h2>
+  <div class="row">
+    <button class="primary" id="btnMic">🎤 เริ่มฟังไมค์</button>
+    <button id="btnMicStop" disabled>■ หยุด</button>
+    <div><label for="wavIn" style="margin-bottom:0">หรือถอดรหัสไฟล์เสียง (WAV/อื่นๆ)</label><input type="file" id="wavIn" accept="audio/*"></div>
+    <button id="btnSelf">⟳ self-test (encode→decode)</button>
+  </div>
+  <div class="row">
+    <div><label for="thr">sensitivity threshold <span id="thrTxt"></span></label><input type="range" id="thr" min="0" max="100" value="40"></div>
+  </div>
+  <div class="meters" id="meters"></div>
+  <p class="hint">ไมค์บางตัว (โดยเฉพาะเว็บแคม) ตัดความถี่สูงทิ้ง จนไม่ได้ยินย่าน ~17.5 kHz — ถ้าถอดรหัสไม่ได้ ลองอัดเป็นไฟล์แล้วเปิดสเปกตรัมดูว่ามีสัญญาณแถว 17.5 kHz ไหม
+    ตัวถอดรหัสนี้เขียนใหม่ด้วย Goertzel ตามลักษณะแพ็กเก็ตใน README (ยังไม่ได้ทดสอบกับ Furby จริง)</p>
+  <div class="log" id="rxLog" aria-live="polite"></div>
+</section>
+
+<!-- ============ 02 CONVERSATION (simulated) ============ -->
+<section class="panel" id="conv">
+  <h2><i>02</i>Conversation · จำลอง Furby 2 ตัวคุยกัน</h2>
+  <div class="warn small">
+    <b>ข้อจำกัดที่ควรรู้:</b> โปรโตคอลเสียงรุ่น 2012 นี้ไม่มีการ "จับคู่"/เช็กชื่อ-สี-รุ่นแบบแอป Furby Connect (Bluetooth, รุ่น 2016) —
+    Furby ตัวไหนได้ยินก็ตอบสนองหมด ไม่มีการระบุตัวตนผู้ส่ง ส่วนที่<b>เป็นของจริง</b>จาก Command.pm คือคำสั่ง <span class="mono">813</span> (ถามบุคลิก → ตอบ <span class="mono">900-905</span>)
+    และ event <span class="mono">883</span>/<span class="mono">884</span> (ชอบ/ไม่ชอบอาหาร) ส่วน "สมอง" ที่ตัดสินใจว่าจะตอบอะไร (มู้ด, หลับ, สุ่มชอบ/ไม่ชอบ) เป็น<b>ตรรกะจำลองที่ผมเขียนเอง</b> ไม่ใช่ของที่ reverse-engineer มา
+    เพราะไม่มีข้อมูลสาธารณะว่า Furby ตัดสินใจภายในอย่างไร
+  </div>
+  <div class="row">
+    <div><label for="persA">Furby A — บุคลิก</label>
+      <select id="persA"></select></div>
+    <div><label for="persB">Furby B — บุคลิก</label>
+      <select id="persB"></select></div>
+  </div>
+  <div class="row">
+    <div><label for="openCmd">คำสั่งเริ่มบทสนทนา</label>
+      <select id="openCmd">
+        <option value="813">813 — ถามบุคลิก (handshake-like)</option>
+        <option value="820">820 — ปลุกให้ฟัง (keep-alive)</option>
+        <option value="350">350 — ป้อนอาหาร (ทั่วไป)</option>
+        <option value="863">863 — สั่งหัวเราะ</option>
+        <option value="868">868 — สั่งร้องเพลง</option>
+        <option value="862">862 — สั่งนอน</option>
+      </select></div>
+    <div><label for="turns">จำนวนรอบสูงสุด</label><input type="number" id="turns" min="1" max="60" value="12" style="width:90px"></div>
+    <label style="margin:18px 0 0"><input type="checkbox" id="convAudible" checked> เปิดเสียงจริง (ได้ยินทั้งคู่ "คุย" กัน)</label>
+  </div>
+  <div class="row">
+    <button class="primary" id="btnConvStart">▶ เริ่มคุย</button>
+    <button id="btnConvStep">⏭ ทีละรอบ</button>
+    <button id="btnConvStop" disabled>■ หยุด</button>
+    <div><label for="convVol">volume <span id="convVolTxt"></span></label><input type="range" id="convVol" min="0" max="100" value="25"></div>
+  </div>
+  <div class="convo" id="convo" aria-live="polite"></div>
+</section>
+
+<!-- ============ 03 COMMANDS ============ -->
+<section class="panel" id="cmds">
+  <h2><i>03</i>Commands · Command.pm</h2>
+  <div class="row"><input type="search" id="q" placeholder="ค้นหา: เลข, คำอธิบาย, note…" style="max-width:340px">
+    <label style="margin:0"><input type="checkbox" id="onlyApp"> เฉพาะที่มีในแอปทางการ (!)</label>
+    <span class="small dim" id="cnt"></span></div>
+  <div class="tw" style="margin-top:12px"><table><thead><tr><th>cmd</th><th>description</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section>
+
+<footer>
+  พอร์ตจาก <a href="https://github.com/iafan/Hacksby" target="_blank" rel="noopener">iafan/Hacksby</a> (Perl, MIT License) · Copyright (C) 2013 Igor Afanasyev.
+  ไม่เกี่ยวข้องกับ Hasbro — Furby เป็นเครื่องหมายการค้าของ Hasbro, Inc.
+  <details style="margin-top:8px"><summary>MIT License</summary>
+<pre>Copyright (C) 2013 Igor Afanasyev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+  </details>
+</footer>
+</div>
+
+<!-- Load order matters: data -> protocol -> audio-engine -> conversation -> client -->
+<script src="data.js"></script>
+<script src="protocol.js"></script>
+<script src="audio-engine.js"></script>
+<script src="conversation.js"></script>
+<script src="client.js"></script>
+</body>
+</html>

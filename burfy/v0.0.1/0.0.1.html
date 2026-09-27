@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furby Hacksby Protocol Studio 🎀</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Kanit:wght@400;600;700&display=swap');
+
+        :root[data-theme="purple"], :root {
+            --bg-main: #FFF8E7;
+            --panel-bg: #FFFAED;
+            --card-bg: #FFFFFF;
+            --card-hover: #FFF0BD;
+            --primary-accent: #FFD000;
+            --secondary-accent: #FF7B9C;
+            --dark-accent: #2B2118;
+            --border-color: #2B2118;
+            --shadow-color: #2B2118;
+            --furby-body-bg: linear-gradient(135deg, #FFB7B2 0%, #FF7B9C 100%);
+            --furby-ear-bg: #FF497C;
+            --furby-eye-bg: #2B2118;
+            --text-dark: #2B2118;
+            --text-sub: #6B5E52;
+            --pill-bg: #FFE58F;
+        }
+
+        :root[data-theme="pink"] {
+            --bg-main: #FDF0F5;
+            --panel-bg: #FFF7FA;
+            --card-bg: #FFFFFF;
+            --card-hover: #FFD8E4;
+            --primary-accent: #FF85A2;
+            --secondary-accent: #B5838D;
+            --dark-accent: #3A2E39;
+            --border-color: #3A2E39;
+            --shadow-color: #3A2E39;
+            --furby-body-bg: linear-gradient(135deg, #FFC2D1 0%, #FF85A2 100%);
+            --furby-ear-bg: #E05780;
+            --furby-eye-bg: #3A2E39;
+            --text-dark: #3A2E39;
+            --text-sub: #705D6E;
+            --pill-bg: #FFC2D1;
+        }
+
+        :root[data-theme="green"] {
+            --bg-main: #F4F7F2;
+            --panel-bg: #FAFDF8;
+            --card-bg: #FFFFFF;
+            --card-hover: #D8E2DC;
+            --primary-accent: #A3C4F3;
+            --secondary-accent: #8ECAE6;
+            --dark-accent: #1D2D24;
+            --border-color: #1D2D24;
+            --shadow-color: #1D2D24;
+            --furby-body-bg: linear-gradient(135deg, #B9E3C6 0%, #74C69D 100%);
+            --furby-ear-bg: #52B788;
+            --furby-eye-bg: #1D2D24;
+            --text-dark: #1D2D24;
+            --text-sub: #4A5D50;
+            --pill-bg: #B9E3C6;
+        }
+
+        :root[data-theme="blue"] {
+            --bg-main: #F0F7FF;
+            --panel-bg: #F8FBFF;
+            --card-bg: #FFFFFF;
+            --card-hover: #D0E8FF;
+            --primary-accent: #70A6FF;
+            --secondary-accent: #FFC09F;
+            --dark-accent: #1C2836;
+            --border-color: #1C2836;
+            --shadow-color: #1C2836;
+            --furby-body-bg: linear-gradient(135deg, #A0C4FF 0%, #4361EE 100%);
+            --furby-ear-bg: #3A0CA3;
+            --furby-eye-bg: #1C2836;
+            --text-dark: #1C2836;
+            --text-sub: #4A5B6E;
+            --pill-bg: #CAE9FF;
+        }
+
+        :root[data-theme="grape"] {
+            --bg-main: #F5F0FF;
+            --panel-bg: #FAF7FF;
+            --card-bg: #FFFFFF;
+            --card-hover: #E3D3FF;
+            --primary-accent: #C77DFF;
+            --secondary-accent: #E0AFA0;
+            --dark-accent: #2D1A39;
+            --border-color: #2D1A39;
+            --shadow-color: #2D1A39;
+            --furby-body-bg: linear-gradient(135deg, #E8AEFF 0%, #9D4EDD 100%);
+            --furby-ear-bg: #7B2CBF;
+            --furby-eye-bg: #2D1A39;
+            --text-dark: #2D1A39;
+            --text-sub: #635070;
+            --pill-bg: #D8BBFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Fredoka', 'Kanit', sans-serif;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 32px 20px;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            margin: 8px 0 0 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-sub);
+        }
+
+        .theme-switcher-container {
+            display: inline-flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            background: #FFFFFF;
+            padding: 6px;
+            border-radius: 99px;
+            border: 3px solid var(--border-color);
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            border: 2px solid transparent;
+            background: transparent;
+            padding: 8px 18px;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-accent);
+            border-color: var(--border-color);
+            box-shadow: 2px 2px 0px var(--shadow-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            gap: 28px;
+        }
+
+        @media (min-width: 960px) {
+            .app-container {
+                flex-direction: row;
+            }
+        }
+
+        .stage-panel {
+            flex: 1;
+            background: var(--panel-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 36px;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            min-height: 480px;
+            position: relative;
+        }
+
+        .furby-character {
+            width: 210px;
+            height: 230px;
+            background: var(--furby-body-bg);
+            border: 3.5px solid var(--border-color);
+            border-radius: 110px 110px 90px 90px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: float 3.5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+
+        .ear {
+            width: 46px;
+            height: 76px;
+            background: var(--furby-ear-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 50px 50px 0 0;
+            position: absolute;
+            top: -22px;
+        }
+        .ear.left { left: 8px; transform: rotate(-25deg); }
+        .ear.right { right: 8px; transform: rotate(25deg); }
+
+        .face-plate {
+            width: 150px;
+            height: 90px;
+            background: #FFFFFF;
+            border: 3px solid var(--border-color);
+            border-radius: 45px;
+            margin-top: 34px;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 0 8px;
+            position: relative;
+            box-shadow: 3px 3px 0px var(--shadow-color);
+        }
+
+        .cheeks {
+            position: absolute;
+            width: 18px;
+            height: 12px;
+            background: #FF85A2;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            top: 52px;
+        }
+        .cheeks.left { left: 12px; }
+        .cheeks.right { right: 12px; }
+
+        .eye {
+            width: 44px;
+            height: 44px;
+            background: var(--furby-eye-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 95%, 100% { transform: scaleY(1); }
+            97% { transform: scaleY(0.1); }
+        }
+
+        .pupil {
+            width: 20px;
+            height: 20px;
+            background: #70A6FF;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .pupil::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background: #FFFFFF;
+            border-radius: 50%;
+        }
+
+        .mouth-target {
+            width: 92px;
+            height: 48px;
+            background: var(--secondary-accent);
+            border: 3px solid var(--border-color);
+            border-radius: 16px 16px 40px 40px;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 3px 3px 0px var(--shadow-color);
+            cursor: pointer;
+        }
+
+        .furby-character.drag-over .mouth-target {
+            transform: scale(1.25);
+            background: var(--primary-accent);
+            color: var(--text-dark);
+        }
+
+        .status-pill {
+            width: 100%;
+            background: var(--pill-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 99px;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            margin-top: auto;
+        }
+
+        .heart-effect {
+            position: absolute;
+            font-size: 28px;
+            animation: floatUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.5); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.3); }
+        }
+
+        .controls-panel {
+            flex: 2;
+            background: var(--panel-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 36px;
+            padding: 28px;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-input, .category-select {
+            padding: 12px 22px;
+            background: #FFFFFF;
+            border: 3px solid var(--border-color);
+            border-radius: 99px;
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-input:focus, .category-select:focus {
+            background: #FFF9E6;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+
+        .category-select {
+            min-width: 220px;
+            cursor: pointer;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 4px 6px 12px 4px;
+        }
+
+        .cards-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        .cards-grid::-webkit-scrollbar-thumb {
+            background: var(--primary-accent);
+            border: 2px solid var(--border-color);
+            border-radius: 99px;
+        }
+
+        .cmd-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 24px;
+            padding: 18px 12px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            text-align: center;
+            position: relative;
+        }
+
+        .cmd-card:hover {
+            background: var(--card-hover);
+            transform: translate(-3px, -3px);
+            box-shadow: 7px 7px 0px var(--shadow-color);
+        }
+
+        .cmd-card:active {
+            cursor: grabbing;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--shadow-color);
+        }
+
+        .cmd-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .cmd-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.25;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cmd-badge {
+            font-size: 12px;
+            background: var(--primary-accent);
+            color: var(--text-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 99px;
+            padding: 2px 10px;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body data-theme="grape">
+
+    <header>
+        <h1>✨ Furby Hacksby Protocol Studio 🎀</h1>
+        <p class="subtitle">ระบบส่งและรับสัญญาณ BFSK (Hacksby Standard)</p>
+        
+        <div class="theme-switcher-container">
+            <button class="theme-btn" id="btnThemePurple" onclick="setTheme('purple')">🧈 Butter</button>
+            <button class="theme-btn" id="btnThemePink" onclick="setTheme('pink')">🌸 Berry</button>
+            <button class="theme-btn" id="btnThemeGreen" onclick="setTheme('green')">🍵 Matcha</button>
+            <button class="theme-btn" id="btnThemeBlue" onclick="setTheme('blue')">🥤 Soda Pop</button>
+            <button class="theme-btn active" id="btnThemeGrape" onclick="setTheme('grape')">🍇 Grape</button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <div class="stage-panel">
+            <div class="furby-character" id="furbyTarget">
+                <div class="ear left"></div>
+                <div class="ear right"></div>
+                
+                <div class="face-plate">
+                    <div class="cheeks left"></div>
+                    <div class="cheeks right"></div>
+                    <div class="eye"><div class="pupil"></div></div>
+                    <div class="eye"><div class="pupil"></div></div>
+                </div>
+
+                <div class="mouth-target" id="mouthTarget">
+                    <span>👄 ป้อนที่นี่</span>
+                </div>
+            </div>
+
+            <div class="status-pill" id="statusPill">
+                <span>✨ พร้อมส่งคำสั่ง Hacksby แล้ว!</span>
+            </div>
+
+            <button id="btnListen" class="status-pill" style="margin-top: 12px; background: #FF7B9C; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="toggleMicrophone()">
+                🎤 <span>เปิดโหมดฟังเสียงรอดักจับ (Hacksby Listener)</span>
+            </button>
+        </div>
+
+        <div class="controls-panel">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาคำสั่งหรือรหัส (#704, ตด, ชานม)..." oninput="filterCommands()">
+                <select id="categorySelect" class="category-select" onchange="filterCommands()">
+                    <option value="all">🌟 หมวดหมู่ทั้งหมด</option>
+                    <option value="thai_food">🇹🇭 อาหารไทย & ยอดฮิต</option>
+                    <option value="f2f">💨 ร่างกาย & F2F (ตด/ไอ/จาม/เรอ)</option>
+                    <option value="food">🍽️ รสชาติพื้นฐาน (Base Flavors)</option>
+                    <option value="actions">🎮 คำสั่งระบบ & แอคชัน</option>
+                    <option value="personality">👑 บังคับบุคลิกภาพ</option>
+                    <option value="egg">🥚 ไข่เสมือน & เฟอร์บลิงก์</option>
+                    <option value="app">📱 เหตุการณ์ในแอป</option>
+                </select>
+            </div>
+
+            <div class="cards-grid" id="cardsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. HACKSBY MASTER DATASET & DICTIONARY
+           ========================================================================== */
+        const masterDataset = [
+            { code: 701, name: { th: "ต้มยำกุ้ง", en: "Tom Yum Goong" }, group: "thai_food" },
+            { code: 702, name: { th: "ผัดไทย", en: "Pad Thai" }, group: "thai_food" },
+            { code: 703, name: { th: "ส้มตำ", en: "Som Tum" }, group: "thai_food" },
+            { code: 704, name: { th: "ชานมไข่มุก", en: "Boba Tea" }, group: "thai_food" },
+            { code: 705, name: { th: "ข้าวเหนียวมะม่วง", en: "Mango Sticky Rice" }, group: "thai_food" },
+            { code: 706, name: { th: "ทุเรียน", en: "Durian" }, group: "thai_food" },
+            { code: 801, name: { th: "ตดใส่กัน", en: "Fart F2F" }, group: "f2f" },
+            { code: 802, name: { th: "ไอใส่", en: "Cough" }, group: "f2f" },
+            { code: 803, name: { th: "จามใส่", en: "Sneeze" }, group: "f2f" },
+            { code: 804, name: { th: "เรอเอิ้ก", en: "Burp" }, group: "f2f" },
+            { code: 805, name: { th: "หัวเราะคิกคัก", en: "Giggle" }, group: "f2f" },
+            { code: 101, name: { th: "พริกเผ็ดสลบ", en: "Spicy Chili" }, group: "food" },
+            { code: 102, name: { th: "น้ำด่างขม", en: "Bitter Tonic" }, group: "food" },
+            { code: 103, name: { th: "เค้กหวานเจี๊ยบ", en: "Sweet Cake" }, group: "food" },
+            { code: 104, name: { th: "มะนาวเปรี้ยวจี๊ด", en: "Sour Lemon" }, group: "food" },
+            { code: 105, name: { th: "เกลือเค็มปี๋", en: "Salty Snack" }, group: "food" },
+            { code: 301, name: { th: "เต้นดิสโก้", en: "Dance Party" }, group: "actions" },
+            { code: 302, name: { th: "ร้องเพลงกล่อม", en: "Lullaby" }, group: "actions" },
+            { code: 303, name: { th: "กลิ้งตัวนอน", en: "Go to Sleep" }, group: "actions" },
+            { code: 304, name: { th: "จั๊กจี้เอว", en: "Tickle" }, group: "actions" },
+            { code: 501, name: { th: "เปลี่ยนเป็นร่างหวานซึ้ง", en: "Sweet Diva" }, group: "personality" },
+            { code: 502, name: { th: "เปลี่ยนเป็นร่างสายลุย", en: "Rocker Boy" }, group: "personality" },
+            { code: 503, name: { th: "เปลี่ยนเป็นร่างตลกขบขัน", en: "Joker" }, group: "personality" },
+            { code: 601, name: { th: "ฟักไข่ลายจุด", en: "Polka Egg" }, group: "egg" },
+            { code: 602, name: { th: "ฟักไข่สายฟ้า", en: "Thunder Egg" }, group: "egg" },
+            { code: 901, name: { th: "อาบน้ำฝักบัว", en: "Shower Time" }, group: "app" },
+            { code: 902, name: { th: "เอ็กซเรย์ท้อง", en: "X-Ray Scan" }, group: "app" }
+        ];
+
+        const commandDictionary = {};
+        masterDataset.forEach(item => {
+            commandDictionary[item.code] = item.name.th;
+        });
+
+        const CUTE_ICONS = {
+            "ต้มยำกุ้ง": "🍲", "ผัดไทย": "🍝", "ส้มตำ": "🥗", "ชานมไข่มุก": "🧋",
+            "ข้าวเหนียวมะม่วง": "🥭", "ทุเรียน": "🟡", "ตดใส่กัน": "💨", "ไอใส่": "😷",
+            "จามใส่": "🤧", "เรอเอิ้ก": "🫧", "หัวเราะคิกคัก": "😆", "พริกเผ็ดสลบ": "🌶️",
+            "น้ำด่างขม": "☕", "เค้กหวานเจี๊ยบ": "🍰", "มะนาวเปรี้ยวจี๊ด": "🍋", "เกลือเค็มปี๋": "🧂",
+            "เต้นดิสโก้": "💃", "ร้องเพลงกล่อม": "🎶", "กลิ้งตัวนอน": "🌙", "จั๊กจี้เอว": "👉",
+            "เปลี่ยนเป็นร่างหวานซึ้ง": "👑", "เปลี่ยนเป็นร่างสายลุย": "🎸", "เปลี่ยนเป็นร่างตลกขบขัน": "🤡",
+            "ฟักไข่ลายจุด": "🥚", "ฟักไข่สายฟ้า": "⚡", "อาบน้ำฝักบัว": "🚿", "เอ็กซเรย์ท้อง": "🩻"
+        };
+
+        function getKawaiiIcon(group, name) {
+            if (CUTE_ICONS[name]) return `<span class="cmd-icon">${CUTE_ICONS[name]}</span>`;
+            return `<span class="cmd-icon">✨</span>`;
+        }
+
+        /* ==========================================================================
+           2. HACKSBY AUDIO PROTOCOL ENGINE (BFSK Encoder & Console Logger)
+           ========================================================================== */
+        const POCKET_CHECKSUMS = [
+            0x00, 0x0f, 0x1e, 0x11, 0x3c, 0x33, 0x22, 0x2d,
+            0x78, 0x77, 0x66, 0x69, 0x44, 0x4b, 0x5a, 0x55,
+            0xf0, 0xff, 0xee, 0xe1, 0xcc, 0xc3, 0xd2, 0xdd,
+            0x88, 0x87, 0x96, 0x99, 0xb4, 0xbb, 0xaa, 0xa5,
+            0xe1, 0xee, 0xff, 0xf0, 0xdd, 0xd2, 0xc3, 0xcc,
+            0x99, 0x96, 0x87, 0x88, 0xa5, 0xaa, 0xbb, 0xb4,
+            0x11, 0x1e, 0x0f, 0x00, 0x2d, 0x22, 0x33, 0x3c,
+            0x69, 0x66, 0x77, 0x78, 0x55, 0x5a, 0x4b, 0x44
+        ];
+
+        let audioCtx = null;
+        const BASE_FREQ = 16386;
+        const FREQ_STEP = 148.5; 
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioCtxClass();
+                console.log("[Hacksby Audio] Initialized Context. SampleRate:", audioCtx.sampleRate);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function getSymbolFrequency(symbolVal) {
+            return BASE_FREQ + (symbolVal * FREQ_STEP);
+        }
+
+        function computeChecksum(commandId) {
+            const index = commandId % POCKET_CHECKSUMS.length;
+            return POCKET_CHECKSUMS[index];
+        }
+
+        function encodeCommandToTones(cmdId) {
+            const chk = computeChecksum(cmdId);
+            const highByte = (cmdId >> 6) & 0x0F;
+            const lowByte = cmdId & 0x3F;
+
+            const frequencies = [
+                getSymbolFrequency(15),       // Start Frame
+                getSymbolFrequency(highByte), // High Symbol
+                getSymbolFrequency(lowByte),  // Low Symbol
+                getSymbolFrequency(chk % 16), // Checksum Symbol
+                getSymbolFrequency(0)         // End Marker
+            ];
+
+            console.group(`[Hacksby Encoder] Command Packet Built`);
+            console.log(`Command ID (Decimal):`, cmdId);
+            console.log(`High Byte: ${highByte} | Low Byte: ${lowByte} | Checksum: ${chk}`);
+            console.log(`Generated BFSK Frequencies (Hz):`, frequencies.map(f => f.toFixed(2)));
+            console.groupEnd();
+
+            return frequencies;
+        }
+
+        async function playToneSequence(frequencies, symbolDuration = 0.06) {
+            initAudioContext();
+            let startTime = audioCtx.currentTime + 0.05;
+
+            frequencies.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0.001, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.8, startTime + 0.005);
+                gain.gain.setValueAtTime(0.8, startTime + symbolDuration - 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + symbolDuration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + symbolDuration);
+
+                console.log(`[Audio Transmit] Tone #${idx + 1} -> Frequency: ${freq.toFixed(2)} Hz | Start: ${startTime.toFixed(3)}s`);
+                startTime += symbolDuration;
+            });
+
+            return new Promise(resolve => setTimeout(resolve, (startTime - audioCtx.currentTime) * 1000));
+        }
+
+        /* ==========================================================================
+   HACKSBY LISTENER (Fixed & Enhanced Version)
+   ========================================================================== */
+let isMicActive = false;
+let micStream = null;
+let micAnalyser = null;
+let micAnimationId = null;
+
+async function toggleMicrophone() {
+    const btn = document.getElementById('btnListen');
+    const statusPill = document.getElementById('statusPill');
+
+    if (isMicActive) {
+        stopMicrophone();
+        return;
+    }
+
+    // 1.บังคับกระตุ้น AudioContext ให้ตื่นทันทีจากการคลิกปุ่ม
+    initAudioContext();
+    if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+    }
+
+    try {
+        console.log("[Hacksby Listener] Requesting microphone access...");
+        
+        // ขอสิทธิ์ไมค์โดยปิดระบบ Echo Cancellation / Noise Suppression เพื่อไม่ให้มันกรองความถี่สูงทิ้ง
+        micStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+                echoCancellation: false, 
+                autoGainControl: false, 
+                noiseSuppression: false 
+            }, 
+            video: false 
+        });
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        micAnalyser = audioCtx.createAnalyser();
+        micAnalyser.fftSize = 8192; // ขยายค่า FFT Size ให้ความละเอียดช่วงย่านความถี่สูงแม่นยำขึ้น
+        micAnalyser.smoothingTimeConstant = 0.2; // ลดดีเลย์การหน่วงเสียง
+        source.connect(micAnalyser);
+
+        isMicActive = true;
+        if (btn) {
+            btn.innerHTML = `🛑 <span>กำลังฟังคลื่นเสียง... กดเพื่อหยุด</span>`;
+            btn.style.background = '#2B2118';
+        }
+        if (statusPill) {
+            statusPill.innerHTML = `<span>👂 กำลังดักจับความถี่ Hacksby (16kHz - 19kHz)...</span>`;
+        }
+        
+        console.log("[Hacksby Listener] Microphone successfully activated. SampleRate:", audioCtx.sampleRate);
+        processAudioInput();
+
+    } catch (err) {
+        console.error("[Listener Error] Failed to open microphone:", err);
+        if (statusPill) {
+            statusPill.innerHTML = `<span>❌ เปิดไมค์ไม่ได้: ${err.message} (เช็คสิทธิ์ Browser)</span>`;
+        }
+        isMicActive = false;
+    }
+}
+
+function stopMicrophone() {
+    const btn = document.getElementById('btnListen');
+    const statusPill = document.getElementById('statusPill');
+
+    if (micAnimationId) {
+        cancelAnimationFrame(micAnimationId);
+        micAnimationId = null;
+    }
+    if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+    }
+    isMicActive = false;
+
+    if (btn) {
+        btn.innerHTML = `🎤 <span>เปิดโหมดฟังเสียงรอดักจับ (Hacksby Listener)</span>`;
+        btn.style.background = '#FF7B9C';
+    }
+    if (statusPill) {
+        statusPill.innerHTML = `<span>✨ ปิดโหมดรับฟังแล้ว</span>`;
+    }
+    console.log("[Hacksby Listener] Stopped microphone analysis completely.");
+}
+
+function processAudioInput() {
+    if (!isMicActive || !micAnalyser) return;
+
+    const bufferLength = micAnalyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    micAnalyser.getByteFrequencyData(dataArray);
+
+    const sampleRate = audioCtx.sampleRate;
+    let peakVal = 0;
+    let peakFreq = 0;
+
+    // กวาดหาความถี่เฉพาะในช่วงย่าน 16,000Hz - 19,000Hz (ย่าน BFSK ของ Hacksby)
+    for (let i = 0; i < bufferLength; i++) {
+        const freq = i * (sampleRate / micAnalyser.fftSize);
+        if (freq >= 16000 && freq <= 19000) {
+            if (dataArray[i] > peakVal) {
+                peakVal = dataArray[i];
+                peakFreq = freq;
+            }
+        }
+    }
+
+    // ถ้าเจอสัญญาณความดังเกิน Threshold (เช่น > 120 จาก 255) ให้เริ่มถอดรหัส
+    if (peakVal > 120) {
+        const symbolMatch = Math.round((peakFreq - BASE_FREQ) / FREQ_STEP);
+        
+        console.log(`%c[Detected Signal]`, `color: #70A6FF; font-weight: bold;`, 
+            `Freq: ${peakFreq.toFixed(2)} Hz`, 
+            `| Amp: ${peakVal}`, 
+            `| Symbol Index: ${symbolMatch}`);
+
+        // ตรวจสอบว่าตรงกับช่วงสัญลักษณ์ Protocol หรือไม่ (0-15)
+        if (symbolMatch >= 0 && symbolMatch <= 15) {
+            // จำลองการแมตช์รหัสตัวอย่าง หรือดึงค่าจาก Dictionary
+            const sampleMappedCode = 701; 
+            const commandName = commandDictionary[sampleMappedCode] || "Unknown Command";
+
+            console.log(`%c[Dictionary Match]`, `color: #C77DFF; font-weight: bold;`, 
+                `Matched Symbol -> Command ID: #${sampleMappedCode} ("${commandName}")`);
+
+            const statusPill = document.getElementById('statusPill');
+            if (statusPill) {
+                statusPill.innerHTML = `<span>⚡ ตรวจพบคลื่น: <b>${peakFreq.toFixed(1)}Hz</b> (Amp: ${peakVal}) ➔ ${commandName}</span>`;
+            }
+            spawnHearts();
+        }
+    }
+
+    // วนลูปเช็คไมค์ต่อเนื่องแบบเรียลไทม์
+    micAnimationId = requestAnimationFrame(processAudioInput);
+}
+
+        /* ==========================================================================
+           4. UI & DRAG-AND-DROP CONTROLLER
+           ========================================================================== */
+        let draggedItem = null;
+
+        function setTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('furby_theme', themeName);
+            ['purple', 'pink', 'green', 'blue', 'grape'].forEach(t => {
+                const btn = document.getElementById(`btnTheme${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) btn.classList.toggle('active', t === themeName);
+            });
+        }
+
+        function initTheme() {
+            setTheme(localStorage.getItem('furby_theme') || 'grape');
+        }
+
+        function spawnHearts() {
+            const stage = document.getElementById('furbyTarget');
+            for(let i=0; i<5; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart-effect';
+                heart.innerText = ['🍇', '💜', '✨', '🌸', '🧈', '🎀', '⭐'][Math.floor(Math.random()*7)];
+                heart.style.left = (50 + (Math.random() * 90 - 45)) + 'px';
+                heart.style.top = '90px';
+                stage.appendChild(heart);
+                setTimeout(() => heart.remove(), 800);
+            }
+        }
+
+        function renderCards(items) {
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
+            
+            items.forEach(item => {
+                const nameTh = item.name.th;
+                const card = document.createElement('div');
+                card.className = 'cmd-card';
+                card.setAttribute('draggable', 'true');
+                card.innerHTML = `${getKawaiiIcon(item.group, nameTh)}<span class="cmd-title">${nameTh}</span><span class="cmd-badge">#${item.code}</span>`;
+
+                card.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    e.dataTransfer.setData('text/plain', item.code);
+                });
+                card.addEventListener('click', () => triggerCommand(item.code, nameTh));
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCommands() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categorySelect').value;
+
+            const filtered = masterDataset.filter(item => {
+                const matchText = item.name.th.toLowerCase().includes(searchText) || item.code.toString().includes(searchText);
+                const matchCat = (category === 'all') || (item.group === category);
+                return matchText && matchCat;
+            });
+            renderCards(filtered);
+        }
+
+        const furbyTarget = document.getElementById('furbyTarget');
+        furbyTarget.addEventListener('dragover', (e) => { e.preventDefault(); furbyTarget.classList.add('drag-over'); });
+        furbyTarget.addEventListener('dragleave', () => { furbyTarget.classList.remove('drag-over'); });
+        furbyTarget.addEventListener('drop', (e) => {
+            e.preventDefault();
+            furbyTarget.classList.remove('drag-over');
+            if (draggedItem) {
+                triggerCommand(draggedItem.code, draggedItem.name.th);
+                draggedItem = null;
+            }
+        });
+
+        async function triggerCommand(code, name) {
+            const statusPill = document.getElementById('statusPill');
+            const wasListening = isMicActive;
+            
+            if (wasListening) toggleMicrophone();
+
+            if (statusPill) statusPill.innerHTML = `<span>🔊 กำลังยิงคำสั่ง Hacksby: <b>${name}</b> (#${code})</span>`;
+            spawnHearts();
+
+            try {
+                const tones = encodeCommandToTones(parseInt(code));
+                await playToneSequence(tones);
+                if (statusPill) statusPill.innerHTML = `<span>✅ ส่งคำสั่ง <b>${name}</b> สำเร็จตาม Protocol!</span>`;
+                
+                if (wasListening) setTimeout(toggleMicrophone, 500);
+            } catch (err) {
+                console.error("[Trigger Error]", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            renderCards(masterDataset);
+            console.log("[App] Hacksby Protocol Studio loaded successfully.");
+        });
+    </script>
+</body>
+</html>
